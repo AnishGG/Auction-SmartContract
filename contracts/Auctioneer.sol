@@ -34,6 +34,9 @@ contract Auctioneer{
     /* For now any number of Bidders are allowed, but these must be kept private*/
     Bidder[] private bidders;
     
+    /* To check that only one bidder can register from one address */
+    mapping (address => uint) private is_bidder;
+    
     /* This structure will represent each notary in the game */
     struct Notary{
         address account;
@@ -62,12 +65,12 @@ contract Auctioneer{
     
     // ensures one of the Bidder is calling the function
     modifier isBidder(){
-        bool is_bidder = false;
+        bool is_bidder_var = false;
         for(uint i = 0;i < bidders.length; i++){
             if(msg.sender == bidders[i].account)
-                is_bidder = true;
+                is_bidder_var = true;
         }
-        require(is_bidder == true, "You are not part of this auction"); _;
+        require(is_bidder_var == true, "You are not part of this auction"); _;
     }
     
     /* You can call this event to check what all items are available for auction */
@@ -88,7 +91,7 @@ contract Auctioneer{
     // allow registration of notaries only before the inputDeadline
     onlyBefore(inputDeadline)
     {
-        require(is_notary[msg.sender] == 0, "Sorry, but you have already registered for this auction");
+        require(is_notary[msg.sender] == 0, "Sorry, but you have already registered for this auction as a notary");
         is_notary[msg.sender] = 1;   // Means now this is present
         notaries.push(Notary({account:msg.sender}));
         num_not_asgnd_notary += 1;
@@ -116,23 +119,37 @@ contract Auctioneer{
             // All the items that the bidder is interested in, should be available in the set m
             require(is_item == true, "The items you sent are not correct");
         }
+        /* Checking if the bidder has already registered */
+        require(is_bidder[msg.sender] == 0, "Sorry, but you have already registered for this auction as a bidder");
+        is_bidder[msg.sender] = 1;          // Add it to the map
+        /* Assigning random notary to the bidder */
         require(assign_notary(Bidder({account:msg.sender, u:_u, v:_v, w1:_w1, w2:_w2})) == true, "No notaries are available");
         bidders.push(Bidder({account:msg.sender, u:_u, v:_v, w1:_w1, w2:_w2}));
     }
     
     /* A random number generator, returns number between zero and n*/
     function random(uint n) private view returns (uint8) {
+        if(n == 0)
+            return 0;
         return uint8(uint256(keccak256(block.timestamp, block.difficulty))%n);
     }
     
     /* A function to randomly assign a notary to a bidder */
     function assign_notary(Bidder _b) private returns (bool) {
         uint x = random(num_not_asgnd_notary);
-        for(uint i = 0;i < notaries.length; i++){
-            if(is_notary[notaries[i].account] == 1){
+        for(uint i = 1;i <= notaries.length; i++){
+            if(is_notary[notaries[i-1].account] == 1){
                 if(x == 0){
-                    is_notary[notaries[i].account] = _b.account;
-                    return true;
+                    /* Handling the case where notary comes equal to the bidder */
+                    if(notaries[i-1].account == _b.account){
+                        if(num_not_asgnd_notary == 1)   return false;   // When only one notary is available and the bidder is also the nottary himself
+                        i = 0;
+                        x = random(num_not_asgnd_notary);
+                    }
+                    else{
+                        is_notary[notaries[i-1].account] = _b.account;
+                        return true;
+                    }
                 }
                 else
                     x--;
