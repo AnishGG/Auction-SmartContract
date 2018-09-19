@@ -157,4 +157,14 @@ contract Auctioneer{
         }
         return false;
     }
+
+    function compare(Bidder x, Bidder y) internal view returns(bool){
+        uint val1 = x.w1 - y.w1;
+        uint val2 = x.w2 - y.w2;
+        if(val1 + val2 == 0 || val1 + val2 < q/2){
+            return true;    // x >= y
+        }
+        else
+            return false;   // x < y
+    }
 }
