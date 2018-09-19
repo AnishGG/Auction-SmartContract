@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
 
-contract game{
+contract Auctioneer{
 
     /* this variable holds the address of the moderator which will run the bidding */
     address public moderator;
@@ -120,8 +120,24 @@ contract game{
         bidders.push(Bidder({account:msg.sender, u:_u, v:_v, w1:_w1, w2:_w2}));
     }
     
+    /* A random number generator, returns number between zero and n*/
+    function random(uint n) private view returns (uint8) {
+        return uint8(uint256(keccak256(block.timestamp, block.difficulty))%n);
+    }
+    
     /* A function to randomly assign a notary to a bidder */
     function assign_notary(Bidder _b) private returns (bool) {
-        return true;
+        uint x = random(num_not_asgnd_notary);
+        for(uint i = 0;i < notaries.length; i++){
+            if(is_notary[notaries[i].account] == 1){
+                if(x == 0){
+                    is_notary[notaries[i].account] = _b.account;
+                    return true;
+                }
+                else
+                    x--;
+            }
+        }
+        return false;
     }
 }
