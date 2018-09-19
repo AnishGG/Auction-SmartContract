@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
 
-contract Auctioneer{
+contract game{
 
     /* this variable holds the address of the moderator which will run the bidding */
     address public moderator;
@@ -18,27 +18,31 @@ contract Auctioneer{
 
     /* To store all the winners among the Bidders */
     address[] public Winners;
+    
 
     /* This structure will represent each bidder in the game */
     struct Bidder{
         address account;
         /* For storing the item choices of a particular bidder */
-        /* Two arrays of variable size in the memory */
+        /* Two arrays of variable size of type uint*/
         uint[] u;
         uint[] v;
-        uint w_1;
-        uint w_2;
+        uint w1;
+        uint w2;
     }
     
-    /* For now any number of Bidders are allowed */
-    Bidder[] public bidders;
+    /* For now any number of Bidders are allowed, but these must be kept private*/
+    Bidder[] private bidders;
     
     /* This structure will represent each notary in the game */
     struct Notary{
         address account;
     }
     Notary[] public notaries;
-    mapping (address => uint) is_notary;
+    // is_notary(x) = 0 means he is not a notary, is_notary(x) = 1 means he is a notary and not been assigned yet, is_notary(x) = $someAddress$ means this notary has been assigned to a bidder
+    // This mapping needs to be private because it contains information about the bidders address which implies it contains bidders interested items and it's value also.'
+    mapping (address => address) private is_notary;
+    uint num_not_asgnd_notary = 0;
     
 
     // ensures the call is made before certain time
@@ -87,5 +91,37 @@ contract Auctioneer{
         require(is_notary[msg.sender] == 0, "Sorry, but you have already registered for this auction");
         is_notary[msg.sender] = 1;   // Means now this is present
         notaries.push(Notary({account:msg.sender}));
+        num_not_asgnd_notary += 1;
+    }
+    
+    /* A public function which will register the bidders, But here the one public address can place multiple bids*/
+    function registerBidder(uint[] _u, uint[] _v, uint _w1, uint _w2)
+    public
+    
+    // allow registration of bidders only before the inputDeadline
+    onlyBefore(inputDeadline)
+    {
+        // For checking that the pair's array are equal in length
+        require(_u.length == _v.length, "Wrong input format");
+        bool is_item = false;
+        for(uint i = 0;i < _u.length; i++){
+            uint x = (_u[i] + _v[i])%q;
+            is_item = false;
+            for(uint j = 0;j < m.length; j++){
+                if(x == m[j]){
+                    is_item = true;
+                    break;
+                }
+            }
+            // All the items that the bidder is interested in, should be available in the set m
+            require(is_item == true, "The items you sent are not correct");
+        }
+        require(assign_notary(Bidder({account:msg.sender, u:_u, v:_v, w1:_w1, w2:_w2})) == true, "No notaries are available");
+        bidders.push(Bidder({account:msg.sender, u:_u, v:_v, w1:_w1, w2:_w2}));
+    }
+    
+    /* A function to randomly assign a notary to a bidder */
+    function assign_notary(Bidder _b) private returns (bool) {
+        return true;
     }
 }
