@@ -157,7 +157,39 @@ contract Auctioneer{
         }
         return false;
     }
-
+    
+    function auctioneer_sort() internal {
+        if(bidders.length >= 2){
+            sort(0, int(bidders.length - 1));
+        }
+    }
+    
+    function sort(int low, int high) internal {
+        int i = low;
+        int j = high;
+        if(i == j)  return;
+        Bidder storage pivot = bidders[uint(low + (high - low) / 2)];
+        while(i <= j){
+            while(compare(bidders[uint(i)], pivot) == false) i++;
+            while(compare(pivot, bidders[uint(j)]) == false) j--; 
+            // while(bidders[uint(i)] < pivot) i++;
+            // while(pivot < bidders[uint(j)]) j--;
+            if(i <= j){
+                Bidder storage temp = bidders[uint(i)];
+                bidders[uint(i)] = bidders[uint(j)];
+                bidders[uint(j)] = temp;
+                i++;
+                j--;
+            }
+        }
+        if(low < j){
+            sort(low, j);
+        }
+        if(i < high){
+            sort(i, high);
+        }
+    }
+    
     function compare(Bidder x, Bidder y) internal view returns(bool){
         uint val1 = x.w1 - y.w1;
         uint val2 = x.w2 - y.w2;
