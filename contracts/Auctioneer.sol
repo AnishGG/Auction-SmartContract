@@ -43,6 +43,7 @@ contract Auctioneer{
         uint w2;
     }
 
+
     /* This structure will represent each notary in the game */
     struct Notary{
         address account;
@@ -60,6 +61,7 @@ contract Auctioneer{
     /* To check that only one bidder can register from one address */
     mapping (address => uint) private is_bidder;
     
+
     /* is_notary(x) = 0 means he is not a notary, is_notary(x) = 1 means he is a notary and not been assigned yet, is_notary(x) = $someAddress$ means this notary has been assigned to a bidder
     This mapping needs to be private because it contains information about the bidders address which implies it contains bidders interested items and it's value also. */
     mapping (address => address) private is_notary;
@@ -67,6 +69,10 @@ contract Auctioneer{
     /* Number of notaries which are not assigned yet */
     uint num_not_asgnd_notary = 0;
     
+
+    function getnotary() public view returns(uint a){
+        return num_not_asgnd_notary;
+    }    
     // ensures the call is made before certain time
     modifier onlyBefore(uint _time){
         require(now - startTime < _time, "Too Late"); _;
