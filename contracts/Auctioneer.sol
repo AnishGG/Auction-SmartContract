@@ -19,6 +19,9 @@ contract Auctioneer{
     /* To store all the winners among the Bidders */
     address[] public Winners;
     
+    /* A map to store what all items are sold till now */
+    mapping(uint => uint) is_sold;
+    
 
     /* This structure will represent each bidder in the game */
     struct Bidder{
@@ -36,6 +39,9 @@ contract Auctioneer{
     
     /* To check that only one bidder can register from one address */
     mapping (address => uint) private is_bidder;
+    
+    /* To store the winners of the auction, these are public for now */
+    address[] public winners;
     
     /* This structure will represent each notary in the game */
     struct Notary{
@@ -198,5 +204,23 @@ contract Auctioneer{
         }
         else
             return false;   // x < y
+    }
+    
+    function find_winners() internal{
+        for(uint i = 0;i < bidders.length; i++){
+            bool is_winner = true;
+            for(uint j = 0;j < bidders[i].u.length; j++){
+                if(is_sold[(bidders[i].u[j] + bidders[i].u[j]) % q] != 0){
+                    is_winner = false;
+                    break;
+                }
+            }
+            if(is_winner == true){
+                winners.push(bidders[i].account);
+                for(j = 0;j < bidders[i].u.length; j++){
+                    is_sold[(bidders[i].u[j] + bidders[i].u[j]) % q] = 1;
+                }
+            }
+        }
     }
 }
