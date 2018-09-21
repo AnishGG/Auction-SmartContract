@@ -9,59 +9,72 @@ contract Auctioneer{
     uint[] public m;
     uint public q;
 
-    /* we will use unix timestamps to keep account of time*/
-    /* Till this time all bidders who want to take part should be registered */
-    uint inputDeadline;
+    /* Time when contract is created */
+    uint startTime;
+
+    /* Time passed after initialisation of contract */
+    function getcurrTime() public view returns(uint a){
+        return now - startTime;
+    }
+
+    /* Till {startTime + notaryDeadline} all notaries who want to take part should be registered*/
+    uint notaryDeadline;
+    
+    /* Till {startTime + bidderDeadline} all bidders who want to take part should be registered*/
+    uint bidderDeadline;
 
     /* to check the number of bidders registering for the auction */
     uint num_bidders;
 
     /* To store all the winners among the Bidders */
-    address[] public Winners;
-    
-    /* A map to store what all items are sold till now */
-    mapping(uint => uint) is_sold;
-    
+    address[] public winners;
 
     /* This structure will represent each bidder in the game */
     struct Bidder{
+        /* Address of Bidder */
         address account;
-        /* For storing the item choices of a particular bidder */
-        /* Two arrays of variable size of type uint*/
+
+        /* Two arrays of variable size of type uint for storing item choices of bidder*/
         uint[] u;
         uint[] v;
+
+        /* Two numbers w1 and w2 for representing W */
         uint w1;
         uint w2;
     }
-    
-    /* For now any number of Bidders are allowed, but these must be kept private*/
-    Bidder[] private bidders;
-    
-    /* To check that only one bidder can register from one address */
-    mapping (address => uint) private is_bidder;
-    
-    /* To store the winners of the auction, these are public for now */
-    address[] public winners;
-    
+
     /* This structure will represent each notary in the game */
     struct Notary{
         address account;
     }
+    
+    /* For now any number of Bidders are allowed, but these must be kept private*/
+    Bidder[] private bidders;
+
+    /* For now any number of Notaries are allowed*/
     Notary[] public notaries;
-    // is_notary(x) = 0 means he is not a notary, is_notary(x) = 1 means he is a notary and not been assigned yet, is_notary(x) = $someAddress$ means this notary has been assigned to a bidder
-    // This mapping needs to be private because it contains information about the bidders address which implies it contains bidders interested items and it's value also.'
+
+    /* A map to store what all items are sold till now */
+    mapping(uint => uint) is_sold;
+
+    /* To check that only one bidder can register from one address */
+    mapping (address => uint) private is_bidder;
+    
+    /* is_notary(x) = 0 means he is not a notary, is_notary(x) = 1 means he is a notary and not been assigned yet, is_notary(x) = $someAddress$ means this notary has been assigned to a bidder
+    This mapping needs to be private because it contains information about the bidders address which implies it contains bidders interested items and it's value also. */
     mapping (address => address) private is_notary;
+    
+    /* Number of notaries which are not assigned yet */
     uint num_not_asgnd_notary = 0;
     
-
     // ensures the call is made before certain time
     modifier onlyBefore(uint _time){
-        require(now < _time, "Too Late"); _;
+        require(now - startTime < _time, "Too Late"); _;
     }
 
     // ensures the call is made after certain time
     modifier onlyAfter(uint _time){
-        require(now > _time, "Too early"); _;
+        require(now - startTime > _time, "Too early"); _;
     }
 
     // ensures only the moderator is calling the function
@@ -82,20 +95,26 @@ contract Auctioneer{
     /* You can call this event to check what all items are available for auction */
     event displayItems(uint[] m);
     
-    /* 27/06/2019 04:00:00 -> unix time stamp = 1561608000 */
-    constructor (uint[] _items, uint _q, uint _inputTime) public{
-        inputDeadline = _inputTime;
+    /* Takes no of of items, prime number, Time after which notary registeration will close (measured from startTime),
+    Time after which bidder registeration will close (measured from startTime), */
+    constructor (uint _noofitems, uint _q, uint _notaryDeadline, uint _bidderDeadline) public{
+        notaryDeadline = _notaryDeadline;
+        bidderDeadline = _bidderDeadline;
+        startTime = now;
         moderator = msg.sender;
-        m = _items;
+        for(uint i = 0;i < _noofitems; i++){
+            m.push(i+1);
+        }
         q = _q;
+        emit displayItems(m);
     }
     
     /* A public function which will register the notary iff one has not registered before */
     function registerNotary()
     public
     
-    // allow registration of notaries only before the inputDeadline
-    onlyBefore(inputDeadline)
+    // allow registration of notaries only before the notaryDeadline
+    onlyBefore(notaryDeadline)
     {
         require(is_notary[msg.sender] == 0, "Sorry, but you have already registered for this auction as a notary");
         is_notary[msg.sender] = 1;   // Means now this is present
@@ -107,8 +126,8 @@ contract Auctioneer{
     function registerBidder(uint[] _u, uint[] _v, uint _w1, uint _w2)
     public
     
-    // allow registration of bidders only before the inputDeadline
-    onlyBefore(inputDeadline)
+    // allow registration of bidders only before the bidderDeadline
+    onlyBefore(bidderDeadline)
     {
         // For checking that the pair's array are equal in length
         require(_u.length == _v.length, "Wrong input format");
