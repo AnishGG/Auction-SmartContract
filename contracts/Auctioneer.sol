@@ -103,6 +103,12 @@ contract Auctioneer{
     
     /* You can call this event to check what all items are available for auction */
     event displayItems(uint[] m);
+
+     /* To display the bidder array */
+    event displayBidder(address b);
+
+    /* To display booleans */
+    event displayBool(bool b);
     
     /* Takes no of of items, prime number, Time after which notary registeration will close (measured from startTime),
     Time after which bidder registeration will close (measured from startTime), */
@@ -191,6 +197,25 @@ contract Auctioneer{
             }
         }
         return false;
+    }
+
+    /* A function to test sorting */
+    /* NOTE: value of (w1 + w2)%q < q/2 as mentioned in the news forum */
+    uint[] ani;
+    uint[] gul;
+    Bidder temp_try;
+    function help() public{
+        ani.push(1);gul.push(19);
+        bidders.push(Bidder({account:1, u:ani, v:gul, w1:30, w2:9}));
+        bidders.push(Bidder({account:2, u:ani, v:gul, w1:30, w2:11}));
+        bidders.push(Bidder({account:3, u:ani, v:gul, w1:30, w2:12}));
+        bidders.push(Bidder({account:4, u:ani, v:gul, w1:30, w2:10}));
+        auctioneer_sort();
+        for(uint i = 0;i < bidders.length; i++){
+            emit displayBidder(bidders[i].account);
+        }
+         emit displayBool(compare(bidders[1], bidders[0]));
+         emit displayBool(compare(bidders[0], bidders[1]));
     }
     
     function auctioneer_sort() internal {
