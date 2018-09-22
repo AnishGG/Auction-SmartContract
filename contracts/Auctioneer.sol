@@ -72,6 +72,9 @@ contract Auctioneer{
 
     function getnotary() public view returns(uint a){
         return num_not_asgnd_notary;
+    }
+    function getbidder() public view returns(uint a){
+        return bidders.length;
     }    
     // ensures the call is made before certain time
     modifier onlyBefore(uint _time){
@@ -179,6 +182,7 @@ contract Auctioneer{
                     }
                     else{
                         is_notary[notaries[i-1].account] = _b.account;
+                        num_not_asgnd_notary--;
                         return true;
                     }
                 }
