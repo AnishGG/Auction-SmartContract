@@ -84,6 +84,15 @@ contract Auctioneer{
     function getBiddercnt() public view returns(uint a){
         return bidders.length;
     }
+    function getBidderidx(address _a) public view returns(int a){
+        int res=-1;
+        for (uint i = 0;i < bidders.length; i++){
+            if(_a == bidders[i].account)
+                res = int(i);            
+        }
+        return res;
+    }
+    
     function getAssignedNotary(address _a) public view returns(address a){
         return b_notary[_a];
     }
@@ -228,8 +237,8 @@ contract Auctioneer{
         for(uint i = 0;i < bidders.length; i++){
             emit displayBidder(bidders[i].account);
         }
-         emit displayBool(compare(bidders[1], bidders[0]));
-         emit displayBool(compare(bidders[0], bidders[1]));
+         emit displayBool(compare(1, 0));
+         emit displayBool(compare(0, 1));
     }
     
     function auctioneer_sort() internal {
@@ -247,10 +256,10 @@ contract Auctioneer{
         int i = low;
         int j = high;
         if(i == j)  return;
-        Bidder storage pivot = bidders[uint(low + (high - low) / 2)];
+        uint pivot = uint(low + (high - low) / 2);
         while(i <= j){
-            while(compare(bidders[uint(i)], pivot) == false) i++;
-            while(compare(pivot, bidders[uint(j)]) == false) j--; 
+            while(compare(uint(i), pivot) == false) i++;
+            while(compare(pivot, uint(j)) == false) j--; 
             // while(bidders[uint(i)] < pivot) i++;
             // while(pivot < bidders[uint(j)]) j--;
             if(i <= j){
@@ -269,7 +278,9 @@ contract Auctioneer{
         }
     }
     
-    function compare(Bidder x, Bidder y) internal returns(bool){
+    function compare(uint i, uint j) internal returns(bool){
+        Bidder storage x = bidders[i];
+        Bidder storage y = bidders[j];
         notary_money[b_notary[x.account]]++;    // work performed by the notary is stored here
         notary_money[b_notary[y.account]]++;    // work performed by the second notary is here
         uint val1 = x.w1 - y.w1;
@@ -337,4 +348,5 @@ contract Auctioneer{
             z = (x / z + z) / 2;
         }
     }
+
 }

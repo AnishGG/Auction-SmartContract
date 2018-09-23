@@ -84,7 +84,7 @@ contract('Auctioneer',  (accounts) => {
 		flag = true;
 		temparray = []
 		for(i = 3; i < 6; i++) {
-			var x = await contractInstance.getAssignedNotary(accounts[i]);
+			var x = await contractInstance.getAssignedNotary.call(accounts[i]);
 			if(temparray.includes(x)){
 				flag = false;
 			}
@@ -98,10 +98,19 @@ contract('Auctioneer',  (accounts) => {
 	it('Check if the assigned notary of bidder is not bidder himself',  async() => {
 		flag = true;
 		for(i = 3; i < 6; i++) {
-			var x = await contractInstance.getAssignedNotary(accounts[i]);
+			var x = await contractInstance.getAssignedNotary.call(accounts[i]);
 			if(x == accounts[i])
 				flag = false;
 		}
 		assert.equal(flag, true, 'Bidder is Notary of himself')
+	})
+
+	it('Check compare 2 bidders', async() => {
+		bid1 = await contractInstance.getBidderidx.call(accounts[3]);
+		bid2 = await contractInstance.getBidderidx.call(accounts[4]);
+		h = await contractInstance.compare.call(bid1.c[0],bid2.c[0]);
+		assert.equal(h, false, 'Compare function not working properly');
+		h = await contractInstance.compare.call(bid1.c[0],bid1.c[0]);
+		assert.equal(h, true, 'Compare function not working properly');
 	})
 })
