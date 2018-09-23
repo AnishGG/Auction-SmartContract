@@ -359,4 +359,30 @@ contract Auctioneer{
         }
     }
 
+    function find_payments() internal{
+        for(uint i = 0;i < winners.length; i++){
+            // need to find proper j and k values as specified in the doc
+            uint j;
+            bool cond = true;
+            for(uint id = 0;id < bidders.length; id++){
+                if(do_intersect(id, winners[i]) == false){  // means there intersection must not be phi
+                    continue;
+                }
+                j = id; // choosing my j as id
+                cond = true;
+                for(uint k = 0;k < j; k++){  // checking if any k is not satisfying the given condition
+                    if(do_intersect(k, j) == true){      // this should never happen
+                        cond = false;
+                        break;
+                    }
+                }
+            }
+            if(cond == false){
+                // no j found, hence payment is equal to zero
+                winner_payment.push(0);
+            }
+        }
+    }
+
+
 }
