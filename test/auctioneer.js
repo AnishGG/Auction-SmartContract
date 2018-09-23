@@ -124,8 +124,8 @@ contract('Auctioneer',  (accounts) => {
 		var len = await contractInstance.getBiddercnt();
 		var mod = await contractInstance.getmod()
 			len=len.c[0];
-		console.log(mod.c[0]);
-		console.log(len);
+		// console.log(mod.c[0]);
+		// console.log(len);
 		z=0;
 
 		for(i=0;i<len;i++)
@@ -133,7 +133,7 @@ contract('Auctioneer',  (accounts) => {
 			const z = i;
 			w1[z] = await contractInstance.bid_val1(z);
 			w2[z] = await contractInstance.bid_val2(z);
-			console.log(w1[z],w2[z]);
+			// console.log(w1[z],w2[z]);
 			val[z] = (w1[z].c[0]+w2[z].c[0])%(mod.c[0]); 
 		}
 		for(i=0;i<len-1;i++)
@@ -147,8 +147,8 @@ contract('Auctioneer',  (accounts) => {
 	})
 
 	it('Check intersection between 2 items', async() => {
-		await contractInstance.compute_intersect()
-			bid1 = await contractInstance.getBidderidx.call(accounts[3]);
+		await contractInstance.compute_intersect();
+		bid1 = await contractInstance.getBidderidx.call(accounts[3]);
 		bid2 = await contractInstance.getBidderidx.call(accounts[4]);
 		bid3 = await contractInstance.getBidderidx.call(accounts[7]);
 		h = await contractInstance.do_intersect.call(bid1.c[0], bid2.c[0]);
@@ -157,4 +157,12 @@ contract('Auctioneer',  (accounts) => {
 		assert.equal(h, false, 'Intersection of 2 items sets is being computed wrong');
 	})
 
+	it('Check square root function', async() => {
+		s = await contractInstance.sqroot(9);
+		r = await contractInstance.sqroot(8);
+		t = await contractInstance.sqroot(36);
+		assert.equal(s, 3, 'Square root is wrong');
+		assert.equal(r, 3, 'Square root is wrong');
+		assert.equal(t, 6, 'Square root is wrong');
+	})
 })

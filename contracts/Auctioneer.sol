@@ -350,13 +350,14 @@ contract Auctioneer{
         }
     }
     
-    function sqrt(uint x) internal pure returns(uint y){
+    function sqroot(uint x) public pure returns(uint y){
         uint z = (x + 1) / 2;
         y = x;
         while (z < y) {
             y = z;
             z = (x / z + z) / 2;
         }
+        return z;
     }
 
     function find_payments() internal{
@@ -378,7 +379,7 @@ contract Auctioneer{
                 }
                 if(cond == true){
                     // my j is found
-                    uint pay = ((bidders[j].w1 + bidders[j].w2) % q) * sqrt(bidders[winners[i]].u.length);
+                    uint pay = ((bidders[j].w1 + bidders[j].w2) % q) * sqroot(bidders[winners[i]].u.length);
                     winner_payment.push(pay);
                     break;
                 }
