@@ -28,6 +28,9 @@ contract Auctioneer{
 
     /* To store all the winners among the Bidders */
     uint[] public winners;
+    
+    /* To store the payment to be collected from winners */
+    uint[] public winner_payment;
 
     /* This structure will represent each bidder in the game */
     struct Bidder{
@@ -81,7 +84,6 @@ contract Auctioneer{
     function getBiddercnt() public view returns(uint a){
         return bidders.length;
     } 
-    
     // ensures the call is made before certain time
     modifier onlyBefore(uint _time){
         require(now - startTime < _time, "Too Late"); _;
@@ -274,7 +276,7 @@ contract Auctioneer{
             return false;   // x < y
     }
     
-    function cmp(uint i, uint j) internal{
+    function cmp_items(uint i, uint j) internal{
         for(uint k = 0;k < bidders[i].u.length; k++){
             for(uint l = 0;l < bidders[j].u.length; l++){
                 notary_money[b_notary[bidders[i].account]]++;   // work performed by notaries is here
@@ -282,37 +284,52 @@ contract Auctioneer{
                 uint val1 = bidders[i].u[k] - bidders[j].u[l];
                 uint val2 = bidders[i].v[k] - bidders[j].v[l];
                 if(val1 + val2 == 0){
-                    intersect[i].push(j);
+                    intersect[i].push(j);   // pushing in both the lists
+                    intersect[j].push(i);   // pushing in both the lists
                     return;
                 }
             }
         }
     }
     
-    function do_intersect() internal{
+    function compute_intersect() internal{
         for(uint i = 0;i < bidders.length; i++){
             for(uint j = i + 1;j < bidders.length; j++){
-                cmp(i, j);
+                cmp_items(i, j);
             }
         }
+    }
+    
+    /* given two bidders, returns weather their items intersect or not */
+    function do_intersect(uint i, uint j) internal view returns(bool){
+        for(uint k = 0;k < intersect[i].length; k++){
+            if(intersect[i][k] == j)
+                return true;
+        }
+        return false;
     }
     
     function find_winners() internal{
         for(uint i = 0;i < bidders.length; i++){
             bool is_winner = true;
             for(uint j = 0;j < winners.length; j++){
-                for(uint k = 0;k < intersect[winners[j]].length; k++){
-                    if(intersect[winners[j]][k] == i){
-                        is_winner = false;
-                        break;
-                    }
-                }
-                if(is_winner == false)
+                if(do_intersect(winners[j], i) == true){
+                    is_winner = false;
                     break;
+                }
             }
             if(is_winner == true){
                 winners.push(i);
             }
+        }
+    }
+    
+    function sqrt(uint x) internal pure returns(uint y){
+        uint z = (x + 1) / 2;
+        y = x;
+        while (z < y) {
+            y = z;
+            z = (x / z + z) / 2;
         }
     }
 }
