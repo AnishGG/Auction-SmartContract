@@ -27,13 +27,12 @@ contract Auctioneer{
     uint num_bidders;
 
     /* To store all the winners among the Bidders */
-    address[] public winners;
+    uint[] public winners;
 
     /* This structure will represent each bidder in the game */
     struct Bidder{
         /* Address of Bidder */
         address account;
-
         /* Two arrays of variable size of type uint for storing item choices of bidder*/
         uint[] u;
         uint[] v;
@@ -55,8 +54,8 @@ contract Auctioneer{
     /* For now any number of Notaries are allowed*/
     Notary[] public notaries;
 
-    /* A map to store what all items are sold till now */
-    mapping(uint => uint) is_sold;
+    /* Stores the number of computations performed by the notary */
+    mapping(address => uint) notary_money;
 
     /* To check that only one bidder can register from one address */
     mapping (address => uint) private is_bidder;
@@ -65,6 +64,12 @@ contract Auctioneer{
     /* is_notary(x) = 0 means he is not a notary, is_notary(x) = 1 means he is a notary and not been assigned yet, is_notary(x) = $someAddress$ means this notary has been assigned to a bidder
     This mapping needs to be private because it contains information about the bidders address which implies it contains bidders interested items and it's value also. */
     mapping (address => address) private is_notary;
+    
+    /* Mapping to store the notary corresponding to a bidder */
+    mapping(address => address) private b_notary;
+    
+    /* find weather 2 bidders have their sets as intersection */
+    mapping(uint => uint[]) private intersect;
     
     /* Number of notaries which are not assigned yet */
     uint num_not_asgnd_notary = 0;
@@ -187,7 +192,8 @@ contract Auctioneer{
                         x = random(num_not_asgnd_notary);
                     }
                     else{
-                        is_notary[notaries[i-1].account] = _b.account;
+                        is_notary[notaries[i-1].account] = _b.account;  // storing the bidder corresponding to the notary
+                        b_notary[_b.account] = notaries[i-1].account;   // storing the notary corresponding to the bidder
                         num_not_asgnd_notary--;
                         return true;
                     }
@@ -255,30 +261,56 @@ contract Auctioneer{
         }
     }
     
-    function compare(Bidder x, Bidder y) internal view returns(bool){
+    function compare(Bidder x, Bidder y) internal returns(bool){
+        notary_money[b_notary[x.account]]++;    // work performed by the notary is stored here
+        notary_money[b_notary[y.account]]++;    // work performed by the second notary is here
         uint val1 = x.w1 - y.w1;
         uint val2 = x.w2 - y.w2;
-        if(val1 + val2 == 0 || (val1 + val2)%q < q/2){
+        if(val1 + val2 == 0 || val1 + val2 < q/2){
             return true;    // x >= y
         }
         else
             return false;   // x < y
     }
     
+    function cmp(uint i, uint j) internal{
+        for(uint k = 0;k < bidders[i].u.length; k++){
+            for(uint l = 0;l < bidders[j].u.length; l++){
+                notary_money[b_notary[bidders[i].account]]++;   // work performed by notaries is here
+                notary_money[b_notary[bidders[j].account]]++;
+                uint val1 = bidders[i].u[k] - bidders[j].u[l];
+                uint val2 = bidders[i].v[k] - bidders[j].v[l];
+                if(val1 + val2 == 0){
+                    intersect[i].push(j);
+                    return;
+                }
+            }
+        }
+    }
+    
+    function do_intersect() internal{
+        for(uint i = 0;i < bidders.length; i++){
+            for(uint j = i + 1;j < bidders.length; j++){
+                cmp(i, j);
+            }
+        }
+    }
+    
     function find_winners() internal{
         for(uint i = 0;i < bidders.length; i++){
             bool is_winner = true;
-            for(uint j = 0;j < bidders[i].u.length; j++){
-                if(is_sold[(bidders[i].u[j] + bidders[i].u[j]) % q] != 0){
-                    is_winner = false;
-                    break;
+            for(uint j = 0;j < winners.length; j++){
+                for(uint k = 0;k < intersect[winners[j]].length; k++){
+                    if(intersect[winners[j]][k] == i){
+                        is_winner = false;
+                        break;
+                    }
                 }
+                if(is_winner == false)
+                    break;
             }
             if(is_winner == true){
-                winners.push(bidders[i].account);
-                for(j = 0;j < bidders[i].u.length; j++){
-                    is_sold[(bidders[i].u[j] + bidders[i].u[j]) % q] = 1;
-                }
+                winners.push(i);
             }
         }
     }
