@@ -4,7 +4,9 @@ const assert = require('assert')
 let contractInstance
 
 contract('Auctioneer',  (accounts) => {
-
+	for(i=0;i<10;i++)
+		console.log(i,accounts[i]);
+	
 	beforeEach(async () => {
 		contractInstance = await Auctioneer.deployed()
 	})
@@ -164,5 +166,31 @@ contract('Auctioneer',  (accounts) => {
 		assert.equal(s, 3, 'Square root is wrong');
 		assert.equal(r, 3, 'Square root is wrong');
 		assert.equal(t, 6, 'Square root is wrong');
+	})
+
+	it('Check winners', async() => {
+		await contractInstance.find_winners()
+		var ans = new Array();
+
+		ans.push(accounts[5],accounts[7]);
+		var len = await contractInstance.getWinnerscnt();
+		len=len.c[0];
+		console.log(len);
+		var flag=true;
+		for(i=0;i<len;i++)
+		{
+			const z=i;
+			var p = await contractInstance.getWinners.call(z);
+			var q = await contractInstance.getBidderadd(p);
+			if(ans.includes(q))
+			{
+				var idx = ans.indexOf(q);
+				if(idx!=-1)
+					ans.splice(idx,1);
+			}
+			else
+				flag = false;
+		}
+		assert.equal(flag,true,'error in find_winners function');
 	})
 })

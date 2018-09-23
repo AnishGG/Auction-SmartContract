@@ -87,6 +87,13 @@ contract Auctioneer{
     function getBiddercnt() public view returns(uint a){
         return bidders.length;
     }
+    
+    function getWinnerscnt() public view returns(uint a){
+        return winners.length;
+    }
+    function getWinners(uint i) public view returns(uint a){
+        return winners[i];
+    }
     function getBidderidx(address _a) public view returns(int a){
         int res=-1;
         for (uint i = 0;i < bidders.length; i++){
@@ -95,7 +102,9 @@ contract Auctioneer{
         }
         return res;
     }
-    
+    function getBidderadd(uint _a) public view returns(address a){
+        return bidders[_a].account;
+    }
     function getmod() public view returns(uint a){ 
         return q;
     }
