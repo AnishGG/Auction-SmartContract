@@ -113,4 +113,33 @@ contract('Auctioneer',  (accounts) => {
 		h = await contractInstance.compare.call(bid1.c[0],bid1.c[0]);
 		assert.equal(h, true, 'Compare function not working properly');
 	})
+	it('Check sorting',  async() => {
+		await contractInstance.auctioneer_sort();
+		var w1 = new Array();
+		var w2 = new Array();
+		var val = new Array();
+		var len = await contractInstance.getBiddercnt();
+		var mod = await contractInstance.getmod()
+		len=len.c[0];
+		console.log(mod.c[0]);
+		console.log(len);
+		z=0;
+		
+		for(i=0;i<len;i++)
+		{
+			const z = i;
+			w1[z] = await contractInstance.bid_val1(z);
+			w2[z] = await contractInstance.bid_val2(z);
+			console.log(w1[z],w2[z]);
+			val[z] = (w1[z].c[0]+w2[z].c[0])%(mod.c[0]); 
+		}
+		for(i=0;i<len-1;i++)
+		{
+			flag=false;
+			// console.log(val[i]);
+			if(val[i]>=val[i+1])
+				flag=true;
+			assert.equal(flag, true, 'kfajlj');
+		}
+	})
 })

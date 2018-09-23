@@ -77,6 +77,9 @@ contract Auctioneer{
     /* Number of notaries which are not assigned yet */
     uint num_not_asgnd_notary = 0;
     
+    function getmod() public view returns(uint a){
+        return q;
+    }
 
     function getNotarycnt() public view returns(uint a){
         return notaries.length;
@@ -95,6 +98,13 @@ contract Auctioneer{
     
     function getAssignedNotary(address _a) public view returns(address a){
         return b_notary[_a];
+    }
+
+    function bid_val1(uint pos) public view returns(uint a){
+        return bidders[pos].w1;
+    }
+    function bid_val2(uint pos) public view returns(uint a){
+        return bidders[pos].w2;
     }
 
 
@@ -241,7 +251,7 @@ contract Auctioneer{
          emit displayBool(compare(0, 1));
     }
     
-    function auctioneer_sort() internal {
+    function auctioneer_sort() public {
         if(bidders.length >= 2){
             sort(0, int(bidders.length - 1));
         }
@@ -278,7 +288,7 @@ contract Auctioneer{
         }
     }
     
-    function compare(uint i, uint j) internal returns(bool){
+    function compare(uint i, uint j) public returns(bool){
         Bidder storage x = bidders[i];
         Bidder storage y = bidders[j];
         notary_money[b_notary[x.account]]++;    // work performed by the notary is stored here
