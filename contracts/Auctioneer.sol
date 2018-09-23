@@ -376,6 +376,12 @@ contract Auctioneer{
                         break;
                     }
                 }
+                if(cond == true){
+                    // my j is found
+                    uint pay = ((bidders[j].w1 + bidders[j].w2) % q) * sqrt(bidders[winners[i]].u.length);
+                    winner_payment.push(pay);
+                    break;
+                }
             }
             if(cond == false){
                 // no j found, hence payment is equal to zero
@@ -383,6 +389,5 @@ contract Auctioneer{
             }
         }
     }
-
 
 }
