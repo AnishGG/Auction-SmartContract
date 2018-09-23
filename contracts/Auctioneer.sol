@@ -75,7 +75,7 @@ contract Auctioneer{
     }
     function getbidder() public view returns(uint a){
         return bidders.length;
-    }    
+    } 
     // ensures the call is made before certain time
     modifier onlyBefore(uint _time){
         require(now - startTime < _time, "Too Late"); _;
@@ -104,7 +104,7 @@ contract Auctioneer{
     /* You can call this event to check what all items are available for auction */
     event displayItems(uint[] m);
 
-     /* To display the bidder array */
+    /* To display the bidder array */
     event displayBidder(address b);
 
     /* To display booleans */
@@ -222,6 +222,11 @@ contract Auctioneer{
         if(bidders.length >= 2){
             sort(0, int(bidders.length - 1));
         }
+        for(uint i = 0;i < bidders.length/2; i++){
+            temp_try = bidders[i];
+            bidders[i] = bidders[bidders.length - i - 1];
+            bidders[bidders.length - i - 1] = temp_try;
+        }
     }
     
     function sort(int low, int high) internal {
@@ -235,9 +240,9 @@ contract Auctioneer{
             // while(bidders[uint(i)] < pivot) i++;
             // while(pivot < bidders[uint(j)]) j--;
             if(i <= j){
-                Bidder storage temp = bidders[uint(i)];
+                temp_try = bidders[uint(i)];
                 bidders[uint(i)] = bidders[uint(j)];
-                bidders[uint(j)] = temp;
+                bidders[uint(j)] = temp_try;
                 i++;
                 j--;
             }
@@ -253,7 +258,7 @@ contract Auctioneer{
     function compare(Bidder x, Bidder y) internal view returns(bool){
         uint val1 = x.w1 - y.w1;
         uint val2 = x.w2 - y.w2;
-        if(val1 + val2 == 0 || val1 + val2 < q/2){
+        if(val1 + val2 == 0 || (val1 + val2)%q < q/2){
             return true;    // x >= y
         }
         else
