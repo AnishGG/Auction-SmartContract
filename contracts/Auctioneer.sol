@@ -77,9 +77,6 @@ contract Auctioneer{
     /* find weather 2 bidders have their sets as intersection */
     mapping(uint => uint[]) private intersect;
     
-    /* Check weather we have recieved the payment from the bidder */
-    mapping(address => uint) payment_recieved;
-    
     /* Number of notaries which are not assigned yet */
     uint num_not_asgnd_notary = 0;
     
@@ -185,6 +182,7 @@ contract Auctioneer{
     /* A public function which will register the bidders, But here the one public address can place multiple bids*/
     function registerBidder(uint[] _u, uint[] _v, uint _w1, uint _w2)
     public
+    payable
     
     // allow registration of bidders only before the bidderDeadline
     onlyBefore(bidderDeadline)
@@ -209,7 +207,10 @@ contract Auctioneer{
         is_bidder[msg.sender] = 1;          // Add it to the map
         /* Assigning random notary to the bidder */
         require(assign_notary(Bidder({account:msg.sender, u:_u, v:_v, w1:_w1, w2:_w2})) == true, "No notaries are available");
+        uint mon_recieved = ((_w1+_w2)%q)*sqroot(_u.length);
+        require(msg.value >= mon_recieved, "Insufficient funds");
         bidders.push(Bidder({account:msg.sender, u:_u, v:_v, w1:_w1, w2:_w2}));
+        notary_money[msg.sender] = msg.value;
     }
     
     /* A random number generator, returns number between zero and n*/
@@ -374,18 +375,6 @@ contract Auctioneer{
         winnersFoundDeadline = 0;   // means now winners are found
     }
     
-    function get_items()
-    public
-    payable
-    onlyAfter(winnersFoundDeadline)
-    {
-        int i = getBidderidx(msg.sender);
-        require(i != -1, "Sorry but you are not registered as bidder");
-        uint fee = winner_payment[uint(i)];
-        require(msg.value >= fee, "Insufficient funds");
-        notary_money[msg.sender] = msg.value - fee;
-        payment_recieved[msg.sender] = 1;
-    }
     
     /* To withdraw the leftover amounts */
     function withdraw()
@@ -429,6 +418,7 @@ contract Auctioneer{
                 if(cond == true){
                     // my j is found
                     uint pay = ((bidders[j].w1 + bidders[j].w2) % q) * sqroot(bidders[winners[i]].u.length);
+                    notary_money[bidders[winners[i]].account] -= pay;
                     winner_payment.push(pay);
                     break;
                 }
@@ -436,6 +426,7 @@ contract Auctioneer{
             if(cond == false){
                 // no j found, hence payment is equal to zero
                 winner_payment.push(0);
+                notary_money[bidders[winners[i]].account] -= 0; // no money deducted
             }
         }
     }
