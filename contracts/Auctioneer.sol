@@ -83,7 +83,12 @@ contract Auctioneer{
     }
     function getBiddercnt() public view returns(uint a){
         return bidders.length;
-    } 
+    }
+    function getAssignedNotary(address _a) public view returns(address a){
+        return b_notary[_a];
+    }
+
+
     // ensures the call is made before certain time
     modifier onlyBefore(uint _time){
         require(now - startTime < _time, "Too Late"); _;

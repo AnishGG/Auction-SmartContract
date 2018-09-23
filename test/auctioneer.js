@@ -4,36 +4,29 @@ const assert = require('assert')
 let contractInstance
 
 contract('Auctioneer',  (accounts) => {
-	var p = new Array()
-		for(i = 0; i < 10; i++) {
-			p[i] = accounts[i];
-			console.log(p[i]);
-		}
+	
 	beforeEach(async () => {
 		contractInstance = await Auctioneer.deployed()
 	})
-	i = 0;
 
-	for(i = 0; i < 8; i+=2) {
-		const z =  i;
-		it('Check if notary is getting registered', async() => {     
-			var prevcnt = await contractInstance.getNotarycnt();
-			console.log(p[z]);      
-			console.log(z) ;
-			await contractInstance.registerNotary({from: p[z]});
-			var newcnt = await contractInstance.getNotarycnt();
-			console.log(newcnt);      
-			assert.equal(prevcnt.c[0] + 1, newcnt.c[0], 'Notary is not registered');6
-		})
-		it('Check if bidder is getting registered', async() => {     
-			var prevcnt = await contractInstance.getBiddercnt();
-			console.log(prevcnt);
-			await contractInstance.registerBidder([2,3],[18,18], 5, 15, {from: p[z+1]});
-			var newcnt = await contractInstance.getBiddercnt();
-			console.log(newcnt);
-			assert.equal(prevcnt.c[0] + 1, newcnt.c[0], 'Bidder is not registered');
-		})   
-	}
+	it('Check if notary is getting registered', async() => {     
+		var prevcnt = await contractInstance.getNotarycnt();
+		await contractInstance.registerNotary({from: accounts[0]});
+		var newcnt = await contractInstance.getNotarycnt();
+		assert.equal(prevcnt.c[0] + 1, newcnt.c[0], 'Notary is not registered');
+		await contractInstance.registerNotary({from: accounts[1]});
+		await contractInstance.registerNotary({from: accounts[2]});
+	})
+		
+	it('Check if bidder is getting registered', async() => {     
+		var prevcnt = await contractInstance.getBiddercnt();
+		await contractInstance.registerBidder([2,3],[18,18], 5, 15, {from: accounts[3]});
+		var newcnt = await contractInstance.getBiddercnt();
+		assert.equal(prevcnt.c[0] + 1, newcnt.c[0], 'Bidder is not registered');
+		await contractInstance.registerBidder([2,3],[18,18], 5, 16, {from: accounts[4]});
+		await contractInstance.registerBidder([2,3],[18,18], 5, 17, {from: accounts[5]});
+	})   
+	
 
 	it('Check if two notaries with same address can get registered', async() => {
 		var prevcnt = await contractInstance.getNotarycnt();
@@ -50,7 +43,7 @@ contract('Auctioneer',  (accounts) => {
 	it('Check if two bidders with same address can get registered', async() => {
 		var prevcnt = await contractInstance.getBiddercnt();
 		try {
-			await contractInstance.registerBidder([2,3],[18,18], 5, 15, {from: p[1]});
+			await contractInstance.registerBidder([2,3],[18,18], 5, 18, {from: accounts[0]});
 		}
 		catch(err){
 		
@@ -62,7 +55,7 @@ contract('Auctioneer',  (accounts) => {
 	it('Check if Bidders items are valid',  async() => {
 		var prevcnt = await contractInstance.getBiddercnt();
 		try {
-			await contractInstance.registerBidder([18,3],[18,18], 5, 15, {from: p[8]});
+			await contractInstance.registerBidder([18,3],[18,18], 5, 18, {from: accounts[6]});
 			assert.ok(false, 'The contract should throw an exception to \
 				as the bidder items are not valid')
 		}
@@ -76,7 +69,7 @@ contract('Auctioneer',  (accounts) => {
 	it('Check if Bidder gets added even when notary is not assigned to bidder',  async() => {
 		/* Every notary is assigned before this test */
 		try {
-			await contractInstance.registerBidder([3,3],[18,18], 5, 15, {from: p[8]});
+			await contractInstance.registerBidder([3,3],[18,18], 5, 18, {from: accounts[6]});
 			assert.ok(false, 'The contract should throw an exception to \
 				as the bidder items are not valid')
 		}
@@ -87,15 +80,28 @@ contract('Auctioneer',  (accounts) => {
 		}
 	})
 
+	it('Check if two bidders have been assigned same notary',  async() => {
+		flag = true;
+		temparray = []
+		for(i = 3; i < 6; i++) {
+			var x = await contractInstance.getAssignedNotary(accounts[i]);
+			if(temparray.includes(x)){
+				flag = false;
+			}
+			else{
+				temparray.push(x)
+			}
+		}
+		assert.equal(flag, true, 'Two Bidders have same Notary')
+	})
+
 	it('Check if the assigned notary of bidder is not bidder himself',  async() => {
 		flag = true;
-		for(i = 1; i < 8; i+=2) {
-			var x = await contractInstance.getAssignedNotary(p[i]);
-			// console.log(x);
-			if(x == p[i])
+		for(i = 3; i < 6; i++) {
+			var x = await contractInstance.getAssignedNotary(accounts[i]);
+			if(x == accounts[i])
 				flag = false;
 		}
 		assert.equal(flag, true, 'Bidder is Notary of himself')
 	})
-
 })
