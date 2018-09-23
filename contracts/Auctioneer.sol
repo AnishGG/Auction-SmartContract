@@ -61,7 +61,7 @@ contract Auctioneer{
     Notary[] public notaries;
 
     /* Stores the number of computations performed by the notary */
-    mapping(address => uint) notary_money;
+    mapping(address => uint) pendingReturns;
 
     /* To check that only one bidder can register from one address */
     mapping (address => uint) private is_bidder;
@@ -210,7 +210,7 @@ contract Auctioneer{
         uint mon_recieved = ((_w1+_w2)%q)*sqroot(_u.length);
         require(msg.value >= mon_recieved, "Insufficient funds");
         bidders.push(Bidder({account:msg.sender, u:_u, v:_v, w1:_w1, w2:_w2}));
-        notary_money[msg.sender] = msg.value;
+        pendingReturns[msg.sender] = msg.value;
     }
     
     /* A random number generator, returns number between zero and n*/
@@ -305,8 +305,8 @@ contract Auctioneer{
     function compare(uint i, uint j) public returns(bool){
         Bidder storage x = bidders[i];
         Bidder storage y = bidders[j];
-        notary_money[b_notary[x.account]]++;    // work performed by the notary is stored here
-        notary_money[b_notary[y.account]]++;    // work performed by the second notary is here
+        pendingReturns[b_notary[x.account]]++;    // work performed by the notary is stored here
+        pendingReturns[b_notary[y.account]]++;    // work performed by the second notary is here
         uint val1 = x.w1 - y.w1;
         uint val2 = x.w2 - y.w2;
         if(val1 + val2 == 0 || val1 + val2 < q/2){
@@ -319,8 +319,8 @@ contract Auctioneer{
     function cmp_items(uint i, uint j) internal{
         for(uint k = 0;k < bidders[i].u.length; k++){
             for(uint l = 0;l < bidders[j].u.length; l++){
-                notary_money[b_notary[bidders[i].account]]++;   // work performed by notaries is here
-                notary_money[b_notary[bidders[j].account]]++;
+                pendingReturns[b_notary[bidders[i].account]]++;   // work performed by notaries is here
+                pendingReturns[b_notary[bidders[j].account]]++;
                 uint val1 = bidders[i].u[k] - bidders[j].u[l];
                 uint val2 = bidders[i].v[k] - bidders[j].v[l];
                 if(val1 + val2 == 0){
@@ -381,9 +381,9 @@ contract Auctioneer{
     public
     returns(bool)
     {
-        uint amount = notary_money[msg.sender];
+        uint amount = pendingReturns[msg.sender];
         if(amount > 0){
-            notary_money[msg.sender] = 0;
+            pendingReturns[msg.sender] = 0;
             msg.sender.transfer(amount);    
         }
         return true;
@@ -404,7 +404,7 @@ contract Auctioneer{
             uint j;
             bool cond = true;
             for(uint id = 0;id < bidders.length; id++){
-                if(do_intersect(id, winners[i]) == false){  // means there intersection must not be phi
+                if(do_intersect(id, winners[i]) == false || winners[i] == id){  // means there intersection must not be phi
                     continue;
                 }
                 j = id; // choosing my j as id
@@ -418,7 +418,7 @@ contract Auctioneer{
                 if(cond == true){
                     // my j is found
                     uint pay = ((bidders[j].w1 + bidders[j].w2) % q) * sqroot(bidders[winners[i]].u.length);
-                    notary_money[bidders[winners[i]].account] -= pay;
+                    pendingReturns[bidders[winners[i]].account] -= pay;
                     winner_payment.push(pay);
                     break;
                 }
@@ -426,7 +426,7 @@ contract Auctioneer{
             if(cond == false){
                 // no j found, hence payment is equal to zero
                 winner_payment.push(0);
-                notary_money[bidders[winners[i]].account] -= 0; // no money deducted
+                pendingReturns[bidders[winners[i]].account] -= 0; // no money deducted
             }
         }
     }
