@@ -318,16 +318,16 @@ contract Auctioneer{
         }
     }
     
-    function compute_intersect() internal{
+    function compute_intersect() public{
         for(uint i = 0;i < bidders.length; i++){
-            for(uint j = i + 1;j < bidders.length; j++){
+            for(uint j = i;j < bidders.length; j++){
                 cmp_items(i, j);
             }
         }
     }
     
     /* given two bidders, returns weather their items intersect or not */
-    function do_intersect(uint i, uint j) internal view returns(bool){
+    function do_intersect(uint i, uint j) public view returns(bool){
         for(uint k = 0;k < intersect[i].length; k++){
             if(intersect[i][k] == j)
                 return true;
