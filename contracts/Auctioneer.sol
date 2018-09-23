@@ -404,12 +404,13 @@ contract Auctioneer{
             uint j;
             bool cond = true;
             for(uint id = 0;id < bidders.length; id++){
-                if(do_intersect(id, winners[i]) == false || winners[i] == id){  // means there intersection must not be phi
+                if(do_intersect(id, winners[i]) == false){  // means there intersection must not be phi
                     continue;
                 }
                 j = id; // choosing my j as id
                 cond = true;
                 for(uint k = 0;k < j; k++){  // checking if any k is not satisfying the given condition
+                    if(winners[i] == k) continue;        // given k != j
                     if(do_intersect(k, j) == true){      // this should never happen
                         cond = false;
                         break;
