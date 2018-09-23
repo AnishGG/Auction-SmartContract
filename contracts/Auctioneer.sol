@@ -22,6 +22,9 @@ contract Auctioneer{
     
     /* Till {startTime + bidderDeadline} all bidders who want to take part should be registered*/
     uint bidderDeadline;
+    
+    /* The time until all the winners are found by the auctioneer */
+    uint winnersFoundDeadline = 32519016732;    // year 3000, month 06, day 27
 
     /* to check the number of bidders registering for the auction */
     uint num_bidders;
@@ -74,12 +77,12 @@ contract Auctioneer{
     /* find weather 2 bidders have their sets as intersection */
     mapping(uint => uint[]) private intersect;
     
+    /* Check weather we have recieved the payment from the bidder */
+    mapping(address => uint) payment_recieved;
+    
     /* Number of notaries which are not assigned yet */
     uint num_not_asgnd_notary = 0;
     
-    function getmod() public view returns(uint a){
-        return q;
-    }
 
     function getNotarycnt() public view returns(uint a){
         return notaries.length;
@@ -96,13 +99,17 @@ contract Auctioneer{
         return res;
     }
     
+    function getmod() public view returns(uint a){ 
+        return q;
+    }
+    
     function getAssignedNotary(address _a) public view returns(address a){
         return b_notary[_a];
     }
-
-    function bid_val1(uint pos) public view returns(uint a){
+    
+    function bid_val1(uint pos) public view returns(uint a){ 
         return bidders[pos].w1;
-    }
+    }   
     function bid_val2(uint pos) public view returns(uint a){
         return bidders[pos].w2;
     }
@@ -141,6 +148,12 @@ contract Auctioneer{
 
     /* To display booleans */
     event displayBool(bool b);
+    
+    /* To display the winners finally */
+    event auctionEnd(uint[] w);
+    
+    /* To display uint */
+    event displayuint(uint a);
     
     /* Takes no of of items, prime number, Time after which notary registeration will close (measured from startTime),
     Time after which bidder registeration will close (measured from startTime), */
@@ -240,7 +253,7 @@ contract Auctioneer{
     function help() public{
         ani.push(1);gul.push(19);
         bidders.push(Bidder({account:1, u:ani, v:gul, w1:30, w2:9}));
-        bidders.push(Bidder({account:2, u:ani, v:gul, w1:30, w2:11}));
+        bidders.push(Bidder({account:2, u:ani, v:gul, w1:30, w2:13}));
         bidders.push(Bidder({account:3, u:ani, v:gul, w1:30, w2:12}));
         bidders.push(Bidder({account:4, u:ani, v:gul, w1:30, w2:10}));
         auctioneer_sort();
@@ -335,7 +348,14 @@ contract Auctioneer{
         return false;
     }
     
-    function find_winners() internal{
+    function find_winners() 
+    public
+    
+    onlyModerator
+    onlyAfter(bidderDeadline)
+    {
+        auctioneer_sort();
+        compute_intersect();
         for(uint i = 0;i < bidders.length; i++){
             bool is_winner = true;
             for(uint j = 0;j < winners.length; j++){
@@ -346,8 +366,38 @@ contract Auctioneer{
             }
             if(is_winner == true){
                 winners.push(i);
+                emit displayBidder(bidders[i].account);
             }
         }
+        find_payments();
+        emit auctionEnd(winners);
+        winnersFoundDeadline = 0;   // means now winners are found
+    }
+    
+    function get_items()
+    public
+    payable
+    onlyAfter(winnersFoundDeadline)
+    {
+        int i = getBidderidx(msg.sender);
+        require(i != -1, "Sorry but you are not registered as bidder");
+        uint fee = winner_payment[uint(i)];
+        require(msg.value >= fee, "Insufficient funds");
+        notary_money[msg.sender] = msg.value - fee;
+        payment_recieved[msg.sender] = 1;
+    }
+    
+    /* To withdraw the leftover amounts */
+    function withdraw()
+    public
+    returns(bool)
+    {
+        uint amount = notary_money[msg.sender];
+        if(amount > 0){
+            notary_money[msg.sender] = 0;
+            msg.sender.transfer(amount);    
+        }
+        return true;
     }
     
     function sqroot(uint x) public pure returns(uint y){
@@ -357,9 +407,8 @@ contract Auctioneer{
             y = z;
             z = (x / z + z) / 2;
         }
-        return z;
     }
-
+    
     function find_payments() internal{
         for(uint i = 0;i < winners.length; i++){
             // need to find proper j and k values as specified in the doc
@@ -390,5 +439,4 @@ contract Auctioneer{
             }
         }
     }
-
 }
