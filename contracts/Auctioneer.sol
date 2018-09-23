@@ -75,12 +75,13 @@ contract Auctioneer{
     uint num_not_asgnd_notary = 0;
     
 
-    function getnotary() public view returns(uint a){
-        return num_not_asgnd_notary;
+    function getNotarycnt() public view returns(uint a){
+        return notaries.length;
     }
-    function getbidder() public view returns(uint a){
+    function getBiddercnt() public view returns(uint a){
         return bidders.length;
     } 
+    
     // ensures the call is made before certain time
     modifier onlyBefore(uint _time){
         require(now - startTime < _time, "Too Late"); _;
