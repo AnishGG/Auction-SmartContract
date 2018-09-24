@@ -31,9 +31,6 @@ contract Auctioneer{
 
     /* To store all the winners among the Bidders */
     uint[] public winners;
-    
-    /* To store the payment to be collected from winners */
-    uint[] public winner_payment;
 
     /* This structure will represent each bidder in the game */
     struct Bidder{
@@ -120,6 +117,10 @@ contract Auctioneer{
         return bidders[pos].w2;
     }
 
+    function getPendingReturn(address _a) public view returns(uint a){
+        return pendingReturns[_a];
+    }
+    
 
     // ensures the call is made before certain time
     modifier onlyBefore(uint _time){
@@ -391,6 +392,7 @@ contract Auctioneer{
     /* To withdraw the leftover amounts */
     function withdraw()
     public
+    onlyAfter(winnersFoundDeadline)
     returns(bool)
     {
         uint amount = pendingReturns[msg.sender];
@@ -410,7 +412,7 @@ contract Auctioneer{
         }
     }
     
-    function find_payments() internal{
+    function find_payments() public{
         for(uint i = 0;i < winners.length; i++){
             // need to find proper j and k values as specified in the doc
             uint j;
@@ -432,13 +434,11 @@ contract Auctioneer{
                     // my j is found
                     uint pay = ((bidders[j].w1 + bidders[j].w2) % q) * sqroot(bidders[winners[i]].u.length);
                     pendingReturns[bidders[winners[i]].account] -= pay;
-                    winner_payment.push(pay);
                     break;
                 }
             }
             if(cond == false){
                 // no j found, hence payment is equal to zero
-                winner_payment.push(0);
                 pendingReturns[bidders[winners[i]].account] -= 0; // no money deducted
             }
         }
