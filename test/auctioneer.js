@@ -26,8 +26,8 @@ contract('Auctioneer',  (accounts) => {
 		await contractInstance.registerBidder([2,3],[18,18], 5, 15, {from: accounts[3], value: web3.toWei(0.000000000001,'ether')});
 		var newcnt = await contractInstance.getBiddercnt();
 		assert.equal(prevcnt.c[0] + 1, newcnt.c[0], 'Bidder is not registered');
-		await contractInstance.registerBidder([2,3],[18,18], 5, 16, {from: accounts[4], value: web3.toWei(0.000000000001,'ether')});
-		await contractInstance.registerBidder([2,3],[18,18], 5, 17, {from: accounts[5], value: web3.toWei(0.000000000001,'ether')});
+		await contractInstance.registerBidder([2,3],[18,18], 5, 16, {from: accounts[4], value: web3.toWei(0.000000000002,'ether')});
+		await contractInstance.registerBidder([2,3],[18,18], 5, 17, {from: accounts[5], value: web3.toWei(0.000000000003,'ether')});
 		await contractInstance.registerBidder([4,5],[18,18], 5, 17, {from: accounts[7], value: web3.toWei(0.000000000001,'ether')});
 		var finalcnt = await contractInstance.getBiddercnt();
 		assert.equal(finalcnt.c[0], 4, 'Bidder is not registered');
@@ -37,10 +37,10 @@ contract('Auctioneer',  (accounts) => {
 	it('Check if two notaries with same address can get registered', async() => {
 		var prevcnt = await contractInstance.getNotarycnt();
 		try {
-			await contractInstance.registerNotary({from: p[0]});
+			await contractInstance.registerNotary({from: accounts[0]});
 		}
 		catch(err){
-
+			console.log(err.message)
 		}
 		var newcnt = await contractInstance.getNotarycnt();
 		assert.equal(prevcnt.c[0], newcnt.c[0], 'Bidder is not registered');
@@ -52,7 +52,7 @@ contract('Auctioneer',  (accounts) => {
 			await contractInstance.registerBidder([2,3],[18,18], 5, 18, {from: accounts[0]});
 		}
 		catch(err){
-
+			console.log(err.message)
 		}
 		var newcnt = await contractInstance.getBiddercnt();
 		assert.equal(prevcnt.c[0], newcnt.c[0], 'Bidder is registered but it should not be');
@@ -171,6 +171,23 @@ contract('Auctioneer',  (accounts) => {
 		assert.equal(t, 6, 'Square root is wrong');
 	})
 
+	it('Check initial amount paid by bidder is correct', async() => {
+		var flag = true;
+		var ans = new Array()
+		ans.push(1000000,2000000,3000000,1000000)
+		for(i = 3; i < 6; i++) {
+			var x = await contractInstance.getPendingReturn.call(accounts[i])
+			console.log(x.c[0])
+			if( x.c[0] != ans[i-3])
+				flag = false;
+		}
+		var x = await contractInstance.getPendingReturn.call(accounts[7]);
+		console.log(x.c[0])
+		if( x.c[0] != ans[3])
+				flag = false;
+		assert.equal(flag, true, 'Initial amount paid by bidder is not correct');
+	})
+
 
 	it('Check winners', async() => {
 		function timepass(){
@@ -185,7 +202,6 @@ contract('Auctioneer',  (accounts) => {
 		ans.push(accounts[5],accounts[7]);
 		var len = await contractInstance.getWinnerscnt();
 		len=len.c[0];
-		console.log(len);
 		var flag=true;
 		for(i=0;i<len;i++)
 		{
