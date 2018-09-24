@@ -23,12 +23,14 @@ contract('Auctioneer',  (accounts) => {
 
 	it('Check if bidder is getting registered', async() => {     
 		var prevcnt = await contractInstance.getBiddercnt();
-		await contractInstance.registerBidder([2,3],[18,18], 5, 15, {from: accounts[3]});
+		await contractInstance.registerBidder([2,3],[18,18], 5, 15, {from: accounts[3], value: web3.toWei(0.000000000001,'ether')});
 		var newcnt = await contractInstance.getBiddercnt();
 		assert.equal(prevcnt.c[0] + 1, newcnt.c[0], 'Bidder is not registered');
-		await contractInstance.registerBidder([2,3],[18,18], 5, 16, {from: accounts[4]});
-		await contractInstance.registerBidder([2,3],[18,18], 5, 17, {from: accounts[5]});
-		await contractInstance.registerBidder([4,5],[18,18], 5, 17, {from: accounts[7]});
+		await contractInstance.registerBidder([2,3],[18,18], 5, 16, {from: accounts[4], value: web3.toWei(0.000000000001,'ether')});
+		await contractInstance.registerBidder([2,3],[18,18], 5, 17, {from: accounts[5], value: web3.toWei(0.000000000001,'ether')});
+		await contractInstance.registerBidder([4,5],[18,18], 5, 17, {from: accounts[7], value: web3.toWei(0.000000000001,'ether')});
+		var finalcnt = await contractInstance.getBiddercnt();
+		assert.equal(finalcnt.c[0], 4, 'Bidder is not registered');
 	})   
 
 
@@ -124,8 +126,8 @@ contract('Auctioneer',  (accounts) => {
 		var w2 = new Array();
 		var val = new Array();
 		var len = await contractInstance.getBiddercnt();
-		var mod = await contractInstance.getmod()
-			len=len.c[0];
+		var mod = await contractInstance.getmod();
+		len=len.c[0];
 		// console.log(mod.c[0]);
 		// console.log(len);
 		z=0;
@@ -161,14 +163,22 @@ contract('Auctioneer',  (accounts) => {
 
 	it('Check square root function', async() => {
 		s = await contractInstance.sqroot(9);
-		r = await contractInstance.sqroot(8);
+		r = await contractInstance.sqroot(25);
 		t = await contractInstance.sqroot(36);
+		//console.log(s, r, t);
 		assert.equal(s, 3, 'Square root is wrong');
-		assert.equal(r, 3, 'Square root is wrong');
+		assert.equal(r, 5, 'Square root is wrong');
 		assert.equal(t, 6, 'Square root is wrong');
 	})
 
+
 	it('Check winners', async() => {
+		function timepass(){
+			for(i=0;i<2000000000;i++);
+			
+		}
+		await timepass();
+
 		await contractInstance.find_winners()
 		var ans = new Array();
 

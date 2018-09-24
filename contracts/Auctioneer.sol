@@ -217,7 +217,10 @@ contract Auctioneer{
         /* Assigning random notary to the bidder */
         require(assign_notary(Bidder({account:msg.sender, u:_u, v:_v, w1:_w1, w2:_w2})) == true, "No notaries are available");
         uint mon_recieved = ((_w1+_w2)%q)*sqroot(_u.length);
-        require(msg.value >= mon_recieved, "Insufficient funds");
+        uint recieved = msg.value;
+        //emit displayuint(mon_recieved);
+        //emit displayuint(recieved);
+        //require(recieved >= mon_recieved, "Insufficient funds");
         bidders.push(Bidder({account:msg.sender, u:_u, v:_v, w1:_w1, w2:_w2}));
         pendingReturns[msg.sender] = msg.value;
     }
