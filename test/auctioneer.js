@@ -219,4 +219,21 @@ contract('Auctioneer',  (accounts) => {
 		}
 		assert.equal(flag,true,'error in find_winners function');
 	})
+
+	it('Check Amount paid to winners is correct', async() => {
+		var flag = true;
+		var ans = new Array()
+		ans.push(1000000,2000000,2999997,999997)
+		for(i = 3; i < 6; i++) {
+			var x = await contractInstance.getPendingReturn.call(accounts[i]);
+			console.log(x.c[0])
+			if( x.c[0] != ans[i-3])
+				flag = false;
+		}
+		var x = await contractInstance.getPendingReturn.call(accounts[7]);
+		console.log(x.c[0])
+		if( x.c[0] != ans[3])
+				flag = false;
+		assert.equal(flag, true, 'Final amount paid to bidder is not correct');
+	})
 })
