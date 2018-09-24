@@ -219,9 +219,9 @@ contract Auctioneer{
         require(assign_notary(Bidder({account:msg.sender, u:_u, v:_v, w1:_w1, w2:_w2})) == true, "No notaries are available");
         uint mon_recieved = ((_w1+_w2)%q)*sqroot(_u.length);
         uint recieved = msg.value;
-        //emit displayuint(mon_recieved);
-        //emit displayuint(recieved);
-        //require(recieved >= mon_recieved, "Insufficient funds");
+        // emit displayuint(mon_recieved);
+        // emit displayuint(recieved);
+        require(recieved >= mon_recieved, "Insufficient funds");
         bidders.push(Bidder({account:msg.sender, u:_u, v:_v, w1:_w1, w2:_w2}));
         pendingReturns[msg.sender] = msg.value;
     }
@@ -235,15 +235,18 @@ contract Auctioneer{
     
     /* A function to randomly assign a notary to a bidder */
     function assign_notary(Bidder _b) private returns (bool) {
+        if(num_not_asgnd_notary == 0)   return false;
         uint x = random(num_not_asgnd_notary);
         for(uint i = 1;i <= notaries.length; i++){
+            if(x >= num_not_asgnd_notary)   return false;
             if(is_notary[notaries[i-1].account] == 1){
                 if(x == 0){
                     /* Handling the case where notary comes equal to the bidder */
                     if(notaries[i-1].account == _b.account){
                         if(num_not_asgnd_notary == 1)   return false;   // When only one notary is available and the bidder is also the nottary himself
                         i = 0;
-                        x = random(num_not_asgnd_notary);
+                        x++;
+                        x = x % num_not_asgnd_notary;
                     }
                     else{
                         is_notary[notaries[i-1].account] = _b.account;  // storing the bidder corresponding to the notary
